@@ -184,7 +184,8 @@ add_action( 'init', 'cgm_core_register_ui_assets', 1 );
 
 if ( ! function_exists( 'cgm_core_current_user_can' ) ) {
     function cgm_core_current_user_can( $cap ) {
-        return current_user_can( $cap ) || current_user_can( 'manage_options' );
+        // Granular capability only; the 1.x manage_options blanket bypass is retired.
+        return current_user_can( $cap );
     }
 }
 

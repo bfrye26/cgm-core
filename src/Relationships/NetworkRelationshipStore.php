@@ -1,9 +1,10 @@
 <?php
 namespace CGM\Core\Relationships;
+use CGM\Core\Contracts\QueryableRelationshipStoreInterface;
 /** Network-wide relationship storage for explicit cross-site schemas. */
-final class NetworkRelationshipStore extends CoreRelationshipStore {
-    // CoreRelationshipStore deliberately uses the current site's table. Network
-    // relationships need blog IDs, so this store implements its own table API.
+final class NetworkRelationshipStore implements QueryableRelationshipStoreInterface {
+    // Deliberately does not extend CoreRelationshipStore: every method needs
+    // blog columns, so nothing of the parent would be reusable.
     private function ntable():string{global $wpdb;return $wpdb->base_prefix.'cgm_core_network_relationships';}
     public static function install():void{if(!is_multisite())return;global $wpdb;$table=$wpdb->base_prefix.'cgm_core_network_relationships';$charset=$wpdb->get_charset_collate();require_once ABSPATH.'wp-admin/includes/upgrade.php';dbDelta("CREATE TABLE {$table} (id BIGINT UNSIGNED NOT NULL AUTO_INCREMENT,relationship_key VARCHAR(100) NOT NULL,source_blog_id BIGINT UNSIGNED NOT NULL,source_type VARCHAR(100) NOT NULL,source_id BIGINT UNSIGNED NOT NULL,target_blog_id BIGINT UNSIGNED NOT NULL,target_type VARCHAR(100) NOT NULL,target_id BIGINT UNSIGNED NOT NULL,role VARCHAR(100) NOT NULL DEFAULT '',sort_order INT NOT NULL DEFAULT 0,is_primary TINYINT(1) NOT NULL DEFAULT 0,meta LONGTEXT NULL,created_at DATETIME NOT NULL,updated_at DATETIME NOT NULL,PRIMARY KEY(id),UNIQUE KEY uniq_rel (relationship_key,source_blog_id,source_type,source_id,target_blog_id,target_type,target_id,role),KEY source_lookup (relationship_key,source_blog_id,source_type,source_id),KEY target_lookup (relationship_key,target_blog_id,target_type,target_id)) {$charset};");}
     public function get(string $r,string $st,int $sid,array $args=array()):array{global $wpdb;$blog=absint($args['source_blog_id']??get_current_blog_id());$rows=$wpdb->get_results($wpdb->prepare("SELECT * FROM {$this->ntable()} WHERE relationship_key=%s AND source_blog_id=%d AND source_type=%s AND source_id=%d ORDER BY is_primary DESC,sort_order ASC,id ASC",$r,$blog,$st,$sid),ARRAY_A)?:array();return array_map(array($this,'nhydrate'),$rows);}

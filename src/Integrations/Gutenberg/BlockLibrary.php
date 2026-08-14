@@ -39,7 +39,7 @@ final class BlockLibrary {
 
     public function collection( array $a, string $content, \WP_Block $block ): string {
         $query_id = sanitize_text_field( (string) ( $a['queryId'] ?? '' ) );
-        if ( ! $query_id ) { return is_admin() ? '' : ''; }
+        if ( ! $query_id ) { return is_admin() ? '<span class="cgm-block-placeholder">' . esc_html__( 'Choose a saved query.', 'cgm-core' ) . '</span>' : ''; }
         $atts = ' id="' . esc_attr( $query_id ) . '"';
         if ( ! empty( $a['filters'] ) ) { $atts .= ' filters="1"'; }
         if ( ! empty( $a['limit'] ) ) { $atts .= ' limit="' . absint( $a['limit'] ) . '"'; }

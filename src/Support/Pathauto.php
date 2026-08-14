@@ -19,6 +19,9 @@ final class Pathauto {
             },
             $pattern
         ) ?? $pattern;
-        return sanitize_title( $slug );
+        $slug = sanitize_title( $slug );
+        // Callers are responsible for uniqueness; this hook lets them resolve
+        // collisions (suffix with a counter, etc.) without Core guessing intent.
+        return apply_filters( 'cgm_core/pathauto_uniquify', $slug, $pattern, $object );
     }
 }

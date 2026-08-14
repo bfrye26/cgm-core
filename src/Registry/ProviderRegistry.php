@@ -1,6 +1,8 @@
 <?php
 namespace CGM\Core\Registry;
 
+use CGM\Core\Support\VersionConstraint;
+
 final class ProviderRegistry extends AbstractRegistry {
     private array $compatibility = array();
 
@@ -47,7 +49,7 @@ final class ProviderRegistry extends AbstractRegistry {
             $missing = array(); $incompatible = array(); $optional_missing = array(); $suggested_missing = array(); $api_incompatible = array();
             foreach ( (array) ( $provider['apis'] ?? array() ) as $api => $constraint ) {
                 $current = $this->api_version( sanitize_key( (string) $api ) );
-                if ( '0' === $current || ! $this->matches( $current, (string) $constraint ) ) { $api_incompatible[] = sanitize_key((string)$api) . ' ' . (string)$constraint . ' (current ' . $current . ')'; }
+                if ( '0' === $current || ! VersionConstraint::matches( $current, (string) $constraint ) ) { $api_incompatible[] = sanitize_key((string)$api) . ' ' . (string)$constraint . ' (current ' . $current . ')'; }
             }
             foreach ( $required as $dependency => $constraint ) {
                 $check = $this->check_dependency( $dependency, $constraint );
@@ -105,7 +107,7 @@ final class ProviderRegistry extends AbstractRegistry {
         foreach ( $requirements as $api => $constraint ) {
             $api = sanitize_key( (string) $api ); $constraint = trim( (string) $constraint ) ?: '*';
             $current = (string) ( $versions[ $api ] ?? '0' );
-            $out[ $api ] = array( 'current'=>$current, 'required'=>$constraint, 'compatible'=>$this->matches( $current, $constraint ) );
+            $out[ $api ] = array( 'current'=>$current, 'required'=>$constraint, 'compatible'=>VersionConstraint::matches( $current, $constraint ) );
         }
         return $out;
     }
@@ -132,31 +134,12 @@ final class ProviderRegistry extends AbstractRegistry {
     private function check_dependency( string $id, string $constraint ): array {
         if ( 'cgm-core' === $id || 'core' === $id ) {
             $version = defined( 'CGM_CORE_VERSION' ) ? CGM_CORE_VERSION : '0';
-            return array( 'status' => $this->matches( $version, $constraint ) ? 'ready' : 'incompatible', 'version' => $version );
+            return array( 'status' => VersionConstraint::matches( $version, $constraint ) ? 'ready' : 'incompatible', 'version' => $version );
         }
         $provider = $this->items[ $id ] ?? null;
         if ( ! $provider ) { return array( 'status' => 'missing', 'version' => '' ); }
         $version = (string) ( $provider['version'] ?? '' );
         if ( '*' === $constraint || '' === $constraint || '' === $version ) { return array( 'status' => 'ready', 'version' => $version ); }
-        return array( 'status' => $this->matches( $version, $constraint ) ? 'ready' : 'incompatible', 'version' => $version );
-    }
-
-    private function matches( string $version, string $constraint ): bool {
-        $version = preg_replace( '/[^0-9.].*$/', '', $version ) ?: '0';
-        $constraint = trim( $constraint );
-        if ( '' === $constraint || '*' === $constraint ) { return true; }
-        if ( str_starts_with( $constraint, '^' ) ) {
-            $min = substr( $constraint, 1 );
-            $parts = array_map( 'intval', explode( '.', $min ) );
-            $max = ( ( $parts[0] ?? 0 ) + 1 ) . '.0.0';
-            return version_compare( $version, $min, '>=' ) && version_compare( $version, $max, '<' );
-        }
-        if ( str_starts_with( $constraint, '~' ) ) {
-            $min = substr( $constraint, 1 ); $parts = array_map( 'intval', explode( '.', $min ) );
-            $max = ( $parts[0] ?? 0 ) . '.' . ( ( $parts[1] ?? 0 ) + 1 ) . '.0';
-            return version_compare( $version, $min, '>=' ) && version_compare( $version, $max, '<' );
-        }
-        if ( preg_match( '/^(>=|<=|>|<|=)\s*(.+)$/', $constraint, $m ) ) { return version_compare( $version, $m[2], $m[1] ); }
-        return version_compare( $version, $constraint, '>=' );
+        return array( 'status' => VersionConstraint::matches( $version, $constraint ) ? 'ready' : 'incompatible', 'version' => $version );
     }
 }

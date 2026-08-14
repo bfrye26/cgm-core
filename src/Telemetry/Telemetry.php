@@ -22,6 +22,7 @@ final class Telemetry {
     private static array $perf = array();
 
     public function register(): void {
+        if ( ! apply_filters( 'cgm_core/telemetry_enabled', true ) ) { return; }
         add_action( 'cgm_core/event', array( $this, 'record_event' ), 10, 3 );
         add_action( 'cgm_core/query_executed', array( $this, 'record_query' ), 10, 4 );
         add_action( 'shutdown', array( $this, 'flush' ) );

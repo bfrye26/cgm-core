@@ -14,7 +14,7 @@ export default defineConfig({
   },
   build: {
     outDir: 'build',
-    emptyOutDir: false,
+    emptyOutDir: true,
     rollupOptions: {
       input: path.resolve(__dirname, 'src/Admin/main.tsx'),
       output: {

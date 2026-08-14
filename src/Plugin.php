@@ -42,13 +42,11 @@ use CGM\Core\Telemetry\Telemetry;
 use CGM\Core\Index\IndexManager;
 use CGM\Core\Rules\RuleEngine;
 use CGM\Core\Workflow\WorkflowManager;
-use CGM\Core\Support\Permissions;
 use CGM\Core\Support\Notifications;
 use CGM\Core\Support\Pathauto;
 use CGM\Core\Support\Locale;
 use CGM\Core\Search\SearchManager;
 use CGM\Core\Graph\GraphManager;
-
 final class Plugin {
     private static ?self $instance = null;
     private bool $booted = false;
@@ -63,7 +61,6 @@ final class Plugin {
     private RuleEngine $rules;
     private WorkflowManager $workflow;
     private ViewModeRegistry $view_modes;
-    private Permissions $permissions;
     private SearchManager $search;
     private FacetRegistry $facets;
     private GraphManager $graph;
@@ -97,7 +94,6 @@ final class Plugin {
         $this->rules = new RuleEngine( $this );
         $this->workflow = new WorkflowManager( $this );
         $this->view_modes = new ViewModeRegistry();
-        $this->permissions = new Permissions( $this );
         $this->search = new SearchManager( $this );
         $this->facets = new FacetRegistry();
         $this->graph = new GraphManager( $this );
@@ -321,7 +317,6 @@ final class Plugin {
     public function rules(): RuleEngine { return $this->rules; }
     public function workflow(): WorkflowManager { return $this->workflow; }
     public function view_modes(): ViewModeRegistry { return $this->view_modes; }
-    public function permissions(): Permissions { return $this->permissions; }
     public function search(): SearchManager { return $this->search; }
     public function facets(): FacetRegistry { return $this->facets; }
     public function graph(): GraphManager { return $this->graph; }

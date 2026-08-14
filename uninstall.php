@@ -16,6 +16,12 @@ function cgm_core_remove_site_data(): void {
         'cgm_core_cache_epoch',
         'cgm_core_cache_namespace_epochs',
         'cgm_core_cache_tag_epochs',
+        'cgm_core_activity',
+        'cgm_core_query_perf',
+        'cgm_core_rules',
+        'cgm_core_notifications',
+        'cgm_core_scheduled_transitions',
+        'cgm_core_auto_transitions',
     ) as $option ) { delete_option( $option ); }
 
     $ids = get_posts( array( 'post_type'=>'cgm_saved_query', 'post_status'=>'any', 'posts_per_page'=>-1, 'fields'=>'ids', 'suppress_filters'=>true ) );
@@ -23,6 +29,11 @@ function cgm_core_remove_site_data(): void {
 
     // phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching
     $wpdb->query( "DROP TABLE IF EXISTS {$wpdb->prefix}cgm_core_relationships" );
+
+    if ( is_multisite() ) {
+        // phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching
+        $wpdb->query( "DROP TABLE IF EXISTS {$wpdb->base_prefix}cgm_core_network_relationships" );
+    }
 
     foreach ( wp_roles()->roles as $role_id => $_role ) {
         $role = get_role( $role_id ); if ( ! $role ) { continue; }

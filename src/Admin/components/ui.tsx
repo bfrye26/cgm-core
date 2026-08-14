@@ -154,16 +154,6 @@ export function Stat({ label, value, icon, tone = 'indigo', delay = 0, hint, suf
   );
 }
 
-/* ── Section title ──────────────────────────────────────────────────── */
-export function SectionTitle({ children, action }: { children: ReactNode; action?: ReactNode }) {
-  return (
-    <div className="mb-4 flex items-end justify-between gap-3">
-      <h2 className="font-display text-xl font-semibold tracking-tight text-ink">{children}</h2>
-      {action}
-    </div>
-  );
-}
-
 /* ── Sub tabs ───────────────────────────────────────────────────────── */
 export function SubTabs<T extends string>({ tabs, active, onChange }: { tabs: { id: T; label: string; count?: number }[]; active: T; onChange: (id: T) => void }) {
   return (

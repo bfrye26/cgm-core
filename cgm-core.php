@@ -49,7 +49,6 @@ if ( ! function_exists( 'cgm_register_index' ) ) { function cgm_register_index( 
 if ( ! function_exists( 'cgm_register_rule_action' ) ) { function cgm_register_rule_action( string $id, string $label, callable $callback ): void { cgm_core()->rules()->register_action( $id, $label, $callback ); } }
 if ( ! function_exists( 'cgm_register_workflow_state' ) ) { function cgm_register_workflow_state( array $definition ): void { cgm_core()->workflow()->register_state( $definition ); } }
 if ( ! function_exists( 'cgm_register_view_mode' ) ) { function cgm_register_view_mode( array $definition ): void { cgm_core()->view_modes()->register( $definition ); } }
-if ( ! function_exists( 'cgm_core_can' ) ) { function cgm_core_can( string $operation, string $resource, int $object_id = 0 ): bool { return cgm_core()->permissions()->can( $operation, $resource, $object_id ); } }
 if ( ! function_exists( 'cgm_register_search_provider' ) ) { function cgm_register_search_provider( CGM\Core\Search\SearchProviderInterface $provider ): void { cgm_core()->search()->register_provider( $provider ); } }
 if ( ! function_exists( 'cgm_register_facet' ) ) { function cgm_register_facet( array $definition ): void { cgm_core()->facets()->register( $definition ); } }
 if ( ! function_exists( 'cgm_notify' ) ) { function cgm_notify( string $id, string $title, string $message, string $type = 'info' ): void { cgm_core()->notifications()->notify( $id, $title, $message, $type ); } }

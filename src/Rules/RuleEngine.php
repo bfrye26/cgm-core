@@ -168,6 +168,15 @@ final class RuleEngine {
     private function run_webhook( array $a, array $payload, string $event ): void {
         $url = esc_url_raw( (string) ( $a['url'] ?? '' ) );
         if ( ! $url ) { return; }
+        // SSRF guard: https only, no private/reserved ranges, with a filter
+        // escape hatch for controlled internal endpoints.
+        $allowed = (bool) apply_filters( 'cgm_core/rule_webhook_url_allowed', false, $url );
+        if ( ! $allowed ) {
+            if ( 'https' !== (string) wp_parse_url( $url, PHP_URL_SCHEME ) ) { return; }
+            $host = (string) wp_parse_url( $url, PHP_URL_HOST );
+            $ip = gethostbyname( $host );
+            if ( $host === $ip || filter_var( $ip, FILTER_VALIDATE_IP, FILTER_FLAG_NO_PRIV_RANGE | FILTER_FLAG_NO_RES_RANGE ) === false ) { return; }
+        }
         $body = array(
             'event'   => $event,
             'payload' => $this->resolve_payload( $payload, $event ),

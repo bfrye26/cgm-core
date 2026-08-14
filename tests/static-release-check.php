@@ -93,7 +93,7 @@ foreach ( array( 'PluginPostStatusInfo', 'Make primary', 'Move up', 'Move down' 
     if ( ! str_contains( $editor, $marker ) ) { $fail[] = 'Gutenberg relationship editor missing marker: ' . $marker; }
 }
 
-$builder = (string) file_get_contents( $root . '/src/admin/components/query-builder.tsx' );
+$builder = (string) file_get_contents( $root . '/src/Admin/components/query-builder.tsx' );
 foreach ( array( 'Group', 'NOT EXISTS', 'cgm-context-tokens', 'Add sort' ) as $marker ) {
     if ( ! str_contains( $builder, $marker ) ) { $fail[] = 'Visual query builder missing marker: ' . $marker; }
 }
