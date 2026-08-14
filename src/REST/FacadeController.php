@@ -18,7 +18,7 @@ final class FacadeController extends BaseController {
         ) );
         register_rest_route( $this->namespace, '/notifications/(?P<id>[a-zA-Z0-9_-]+)', array(
             'methods'=>\WP_REST_Server::CREATABLE, 'callback'=>array($this,'dismiss'),
-            'permission_callback'=>fn()=>$this->can_manage(),
+            'permission_callback'=>fn()=>$this->can_manage()&&$this->rest_nonce_ok(),
             'args'=>array('id'=>array('required'=>true,'type'=>'string','sanitize_callback'=>'sanitize_key')),
         ) );
     }

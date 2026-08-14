@@ -30,7 +30,7 @@ final class ConfigController extends BaseController {
         register_rest_route( $this->namespace, '/config/import', array(
             'methods'=>\WP_REST_Server::CREATABLE,
             'callback'=>array($this,'import'),
-            'permission_callback'=>fn()=>current_user_can('manage_cgm_configuration'),
+            'permission_callback'=>fn()=>current_user_can('manage_cgm_configuration')&&$this->rest_nonce_ok(),
             'args'=>array(
                 'config'=>array('required'=>true,'type'=>'object'),
                 'mode'=>array('type'=>'string','enum'=>array('merge','replace'),'default'=>'merge','sanitize_callback'=>'sanitize_key'),
@@ -45,7 +45,7 @@ final class ConfigController extends BaseController {
         register_rest_route( $this->namespace, '/config/rollback/(?P<id>[a-zA-Z0-9_-]+)', array(
             'methods'=>\WP_REST_Server::CREATABLE,
             'callback'=>array($this,'rollback'),
-            'permission_callback'=>fn()=>current_user_can('manage_cgm_configuration'),
+            'permission_callback'=>fn()=>current_user_can('manage_cgm_configuration')&&$this->rest_nonce_ok(),
             'args'=>array('id'=>array('required'=>true,'type'=>'string','sanitize_callback'=>'sanitize_text_field')),
         ) );
     }

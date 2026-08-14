@@ -28,7 +28,15 @@ final class QueryEngine {
 
         $public_only = ! empty( $ctx['public_request'] );
         if ( $public_only && empty( $content_type['public'] ) ) { return new QueryResult( array(), 0, 1, (int)$query['limit'], array( 'error'=>'This content type is not publicly queryable.' ) ); }
-        if ( in_array( (string) ( $content_type['kind'] ?? '' ), array( 'post','media' ), true ) && ( $public_only || ! current_user_can( 'edit_posts' ) ) ) {
+        // Saved queries marked non-public only run for managers (or explicitly
+        // privileged callers), regardless of entry point: REST, shortcode, block.
+        if ( $saved && empty( $saved['public'] ) && ! current_user_can( 'manage_cgm_queries' ) && ! current_user_can( 'inspect_cgm_data' ) && empty( $ctx['allow_private'] ) ) {
+            return new QueryResult( array(), 0, 1, (int)$query['limit'], array( 'error'=>'This query is not publicly runnable.' ) );
+        }
+        // Never use edit_posts as a status gate: authors can read drafts of
+        // others, but must not be able to query them. read_private_posts is the
+        // real bar for non-publish statuses.
+        if ( in_array( (string) ( $content_type['kind'] ?? '' ), array( 'post','media' ), true ) && ( $public_only || ! current_user_can( 'read_private_posts' ) ) ) {
             $query['status'] = 'media' === ( $content_type['kind'] ?? '' ) ? array( 'inherit' ) : array( 'publish' );
         }
 
@@ -90,12 +98,16 @@ final class QueryEngine {
 
     /** Aggregate a query: COUNT/SUM/AVG/MIN/MAX grouped by a field or taxonomy. */
     public function aggregate( array|string|int $query, array $context = array() ): array {
+        $saved = null;
         if ( is_string( $query ) || is_int( $query ) ) {
             $saved = $this->repository->find( $query );
             if ( ! $saved ) { return array( 'error' => 'Query not found.' ); }
             $query = $saved['definition'];
         }
         $query = $this->validator->normalize( $query );
+        if ( $saved && empty( $saved['public'] ) && ! current_user_can( 'manage_cgm_queries' ) && ! current_user_can( 'inspect_cgm_data' ) && empty( $context['allow_private'] ) ) {
+            return array( 'error' => 'This query is not publicly runnable.' );
+        }
         $ctx = $this->core->context()->resolve( $context );
         $query = $this->core->context()->replace_tokens( $query, $ctx );
         $content_type = $this->core->content_types()->get( (string) $query['content_type'] );

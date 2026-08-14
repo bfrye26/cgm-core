@@ -16,7 +16,7 @@ final class BulkController extends BaseController {
         ) );
         register_rest_route( $this->namespace, '/bulk/run', array(
             'methods'=>\WP_REST_Server::CREATABLE, 'callback'=>array($this,'run'),
-            'permission_callback'=>fn()=>current_user_can('manage_cgm_queries')||current_user_can('manage_cgm_core'),
+            'permission_callback'=>fn()=>(current_user_can('manage_cgm_queries')||current_user_can('manage_cgm_core'))&&$this->rest_nonce_ok(),
             'args'=>array('query'=>array('required'=>true),'actions'=>array('required'=>true,'type'=>'array','maxItems'=>50)),
         ) );
     }

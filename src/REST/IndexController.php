@@ -15,7 +15,7 @@ final class IndexController extends BaseController {
         ) );
         register_rest_route( $this->namespace, '/indexes/rebuild', array(
             'methods'=>\WP_REST_Server::CREATABLE, 'callback'=>fn($r)=>rest_ensure_response(array('rebuilding'=>(new IndexManager($this->core))->rebuild(sanitize_key((string)$r->get_param('index'))))),
-            'permission_callback'=>fn()=>$this->can_manage(),
+            'permission_callback'=>fn()=>$this->can_manage()&&$this->rest_nonce_ok(),
             'args'=>array('index'=>array('type'=>'string','sanitize_callback'=>'sanitize_key','default'=>'')),
         ) );
     }

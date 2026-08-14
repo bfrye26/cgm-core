@@ -14,7 +14,7 @@ final class WorkflowController extends BaseController {
         ) );
         register_rest_route( $this->namespace, '/workflow/transition', array(
             'methods'=>\WP_REST_Server::CREATABLE, 'callback'=>array($this,'transition'),
-            'permission_callback'=>fn()=>current_user_can('edit_posts')||$this->can_manage(),
+            'permission_callback'=>fn($r)=>(current_user_can('manage_cgm_core')||current_user_can('edit_post',absint($r->get_param('object_id'))))&&$this->rest_nonce_ok(),
             'args'=>array(
                 'object_id'=>array('required'=>true,'type'=>'integer','minimum'=>1,'sanitize_callback'=>'absint'),
                 'state'=>array('required'=>true,'type'=>'string','sanitize_callback'=>'sanitize_key'),
@@ -26,7 +26,7 @@ final class WorkflowController extends BaseController {
         ) );
         register_rest_route( $this->namespace, '/workflow/schedule', array(
             'methods'=>\WP_REST_Server::CREATABLE, 'callback'=>array($this,'schedule'),
-            'permission_callback'=>fn()=>current_user_can('edit_posts')||$this->can_manage(),
+            'permission_callback'=>fn($r)=>(current_user_can('manage_cgm_core')||current_user_can('edit_post',absint($r->get_param('object_id'))))&&$this->rest_nonce_ok(),
             'args'=>array(
                 'object_id'=>array('required'=>true,'type'=>'integer','minimum'=>1,'sanitize_callback'=>'absint'),
                 'state'=>array('required'=>true,'type'=>'string','sanitize_callback'=>'sanitize_key'),
@@ -35,7 +35,7 @@ final class WorkflowController extends BaseController {
         ) );
         register_rest_route( $this->namespace, '/workflow/scheduled/(?P<id>[a-zA-Z0-9_-]+)', array(
             'methods'=>\WP_REST_Server::CREATABLE, 'callback'=>array($this,'cancel'),
-            'permission_callback'=>fn()=>current_user_can('edit_posts')||$this->can_manage(),
+            'permission_callback'=>fn($r)=>(current_user_can('manage_cgm_core')||$this->can_cancel((string)$r['id']))&&$this->rest_nonce_ok(),
             'args'=>array('id'=>array('required'=>true,'type'=>'string','sanitize_callback'=>'sanitize_key')),
         ) );
         register_rest_route( $this->namespace, '/workflow/auto-transitions', array(
@@ -45,18 +45,24 @@ final class WorkflowController extends BaseController {
             ),
             array(
                 'methods'=>\WP_REST_Server::CREATABLE, 'callback'=>array($this,'save_auto_transitions'),
-                'permission_callback'=>fn()=>$this->can_manage(),
+                'permission_callback'=>fn()=>$this->can_manage()&&$this->rest_nonce_ok(),
                 'args'=>array('rules'=>array('required'=>true,'type'=>'array','maxItems'=>100)),
             ),
         ) );
         register_rest_route( $this->namespace, '/workflow/auto-transitions/run', array(
             'methods'=>\WP_REST_Server::CREATABLE, 'callback'=>array($this,'run_auto_transitions'),
-            'permission_callback'=>fn()=>$this->can_manage(),
+            'permission_callback'=>fn()=>$this->can_manage()&&$this->rest_nonce_ok(),
         ) );
     }
 
     private function can_view(): bool {
         return current_user_can( 'edit_posts' ) || current_user_can( 'inspect_cgm_core' ) || $this->can_manage();
+    }
+
+    private function can_cancel( string $id ): bool {
+        $entry = $this->core->workflow()->scheduled_entry( $id );
+        if ( ! $entry ) { return false; }
+        return current_user_can( 'edit_post', absint( $entry['post_id'] ?? 0 ) );
     }
 
     public function transition( \WP_REST_Request $r ): \WP_REST_Response {

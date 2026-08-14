@@ -23,7 +23,7 @@ final class RelationshipFeatures {
     private function rows( string $id, mixed $object ): array {
         $ref = $this->source_ref( $object );
         if ( ! $ref ) { return array(); }
-        return $this->core->relationships()->get( $id, $ref->id, array( 'source_type'=>$ref->content_type ) );
+        return $this->core->relationships()->get( $id, $ref->id, array( 'source_type'=>$ref->content_type, 'public_only'=>! current_user_can( 'inspect_cgm_data' ) ) );
     }
 
     private function register_dynamic_data( string $id, array $type ): void {

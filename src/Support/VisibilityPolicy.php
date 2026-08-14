@@ -8,6 +8,7 @@ use CGM\Core\Contracts\VisibilityPolicyInterface;
  * unavailable. ObjectResolver is the preferred visibility authority.
  */
 final class VisibilityPolicy implements VisibilityPolicyInterface {
+    public function is_public( string $object_type, int $object_id ): bool { return $this->can_read( $object_type, $object_id, true ); }
     public function can_read( string $object_type, int $object_id, bool $public_only = false ): bool {
         $object_type = sanitize_key( $object_type );
         if ( $object_id < 1 ) { return false; }

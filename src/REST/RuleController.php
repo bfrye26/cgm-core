@@ -15,7 +15,7 @@ final class RuleController extends BaseController {
             ),
             array(
                 'methods'=>\WP_REST_Server::CREATABLE, 'callback'=>array($this,'save'),
-                'permission_callback'=>fn()=>current_user_can('manage_cgm_core'),
+                'permission_callback'=>fn()=>current_user_can('manage_cgm_core')&&$this->rest_nonce_ok(),
                 'args'=>array('rules'=>array('required'=>true,'type'=>'array','maxItems'=>200)),
             ),
         ) );

@@ -47,9 +47,15 @@ final class WorkflowManager {
     /** Persist the derived state so meta-based filters and queries are complete. */
     public function ensure_state( int $post_id ): void {
         if ( wp_is_post_revision( $post_id ) || wp_is_post_autosave( $post_id ) ) { return; }
-        if ( get_post_meta( $post_id, self::META, true ) ) { return; }
-        update_post_meta( $post_id, self::META, 'publish' === get_post_status( $post_id ) ? 'published' : 'draft' );
-        if ( ! get_post_meta( $post_id, self::META_CHANGED, true ) ) { update_post_meta( $post_id, self::META_CHANGED, time() ); }
+        $stored = get_post_meta( $post_id, self::META, true );
+        $derived = 'publish' === get_post_status( $post_id ) ? 'published' : 'draft';
+        // First save: persist the derived state. Later saves through the native
+        // editor: sync stored default states so lists and auto-transitions stay
+        // accurate (a post published via wp-admin must not stay "draft").
+        if ( ! $stored || ( in_array( sanitize_key( (string) $stored ), array( 'draft', 'published' ), true ) && $stored !== $derived ) ) {
+            update_post_meta( $post_id, self::META, $derived );
+            update_post_meta( $post_id, self::META_CHANGED, time() );
+        }
     }
 
     public function register_field(): void {
@@ -87,6 +93,22 @@ final class WorkflowManager {
     }
 
     public function transition( int $id, string $state ): bool {
+        // Object-level capability check: wp_update_post() below performs none.
+        if ( ! current_user_can( 'edit_post', $id ) && ! current_user_can( 'manage_cgm_core' ) && ! wp_doing_cron() ) { return false; }
+        if ( ! $this->transition_allowed( $id, $state ) ) { return false; }
+        return $this->transition_internal( $id, $state );
+    }
+
+    /** Is `$state` reachable from the object's current state per the registered transition graph? */
+    private function transition_allowed( int $id, string $state ): bool {
+        $state = sanitize_key( $state );
+        $current = $this->get_state( $id );
+        if ( $current === $state ) { return true; }
+        if ( ! isset( $this->states[ $current ] ) ) { return true; }
+        return in_array( $state, (array) ( $this->states[ $current ]['transitions'] ?? array() ), true );
+    }
+
+    private function transition_internal( int $id, string $state ): bool {
         if ( ! $id || ! get_post( $id ) ) { return false; }
         $state = sanitize_key( $state );
         if ( ! isset( $this->states[ $state ] ) ) { return false; }
@@ -142,7 +164,7 @@ final class WorkflowManager {
             $after = max( 1, (int) ( $rule['after_days'] ?? 30 ) );
             $types = array_values( array_filter( array_map( 'sanitize_key', (array) ( $rule['content_types'] ?? array( '*' ) ) ) ) );
             foreach ( $this->find_due_posts( $from, $after, $types ) as $post_id ) {
-                if ( $this->transition( $post_id, $to ) ) { $count++; }
+                if ( $this->transition_internal( $post_id, $to ) ) { $count++; }
             }
         }
         return $count;
@@ -176,6 +198,7 @@ final class WorkflowManager {
      */
     public function schedule_transition( int $post_id, string $state, int $timestamp ): bool|\WP_Error {
         if ( ! $post_id || ! get_post( $post_id ) ) { return new \WP_Error( 'cgm_workflow_missing_post', __( 'Post not found.', 'cgm-core' ) ); }
+        if ( ! current_user_can( 'edit_post', $post_id ) && ! current_user_can( 'manage_cgm_core' ) ) { return new \WP_Error( 'cgm_workflow_forbidden', __( 'You cannot schedule transitions for this post.', 'cgm-core' ) ); }
         $state = sanitize_key( $state );
         if ( ! isset( $this->states[ $state ] ) ) { return new \WP_Error( 'cgm_workflow_bad_state', __( 'Unknown workflow state.', 'cgm-core' ) ); }
         if ( $timestamp < time() + MINUTE_IN_SECONDS ) { return new \WP_Error( 'cgm_workflow_past_date', __( 'Scheduled time must be in the future.', 'cgm-core' ) ); }
@@ -196,6 +219,8 @@ final class WorkflowManager {
         foreach ( $this->scheduled_raw() as $entry ) {
             $post_id = (int) ( $entry['post_id'] ?? 0 );
             if ( ! $post_id || ! get_post( $post_id ) ) { continue; }
+            // Only expose scheduled transitions for posts this user may edit.
+            if ( ! current_user_can( 'edit_post', $post_id ) && ! current_user_can( 'manage_cgm_core' ) && ! current_user_can( 'inspect_cgm_core' ) ) { continue; }
             $state = (string) ( $entry['state'] ?? '' );
             $label = $state;
             foreach ( $this->states as $s ) { if ( $s['id'] === $state ) { $label = $s['label']; break; } }
@@ -208,9 +233,17 @@ final class WorkflowManager {
         return $out;
     }
 
+    /** @return array{id:string,post_id:int,state:string,at:int,created:int}|null */
+    public function scheduled_entry( string $id ): ?array {
+        return $this->scheduled_raw()[ sanitize_key( $id ) ] ?? null;
+    }
+
     public function cancel_scheduled( string $id ): bool {
         $scheduled = $this->scheduled_raw();
-        if ( ! isset( $scheduled[ sanitize_key( $id ) ] ) ) { return false; }
+        $entry = $scheduled[ sanitize_key( $id ) ] ?? null;
+        if ( ! $entry ) { return false; }
+        $post_id = (int) ( $entry['post_id'] ?? 0 );
+        if ( ! current_user_can( 'edit_post', $post_id ) && ! current_user_can( 'manage_cgm_core' ) ) { return false; }
         unset( $scheduled[ sanitize_key( $id ) ] );
         $this->save_scheduled( $scheduled );
         return true;
@@ -224,7 +257,7 @@ final class WorkflowManager {
         $this->save_scheduled( $scheduled );
         $post_id = (int) ( $entry['post_id'] ?? 0 );
         if ( ! $post_id || ! get_post( $post_id ) ) { return; }
-        $this->transition( $post_id, (string) ( $entry['state'] ?? '' ) );
+        $this->transition_internal( $post_id, (string) ( $entry['state'] ?? '' ) );
     }
 
     private function scheduled_raw(): array {

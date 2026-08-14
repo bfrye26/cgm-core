@@ -10,7 +10,7 @@ final class RelationshipController extends BaseController {
     public function register_routes(): void {
         register_rest_route( $this->namespace, '/relationships/definitions', array(
             'methods'=>\WP_REST_Server::CREATABLE, 'callback'=>array($this,'save_definitions'),
-            'permission_callback'=>fn()=>current_user_can('manage_cgm_relationships'),
+            'permission_callback'=>fn()=>current_user_can('manage_cgm_relationships')&&$this->rest_nonce_ok(),
             'args'=>array('rows'=>array('required'=>true,'type'=>'array','maxItems'=>500)),
         ) );
         register_rest_route( $this->namespace, '/relationships/(?P<relationship>[a-z0-9_-]+)/(?P<source_id>\d+)', array(
@@ -49,12 +49,14 @@ final class RelationshipController extends BaseController {
         return $this->core->relationships()->can_read($rel,$source,$type);
     }
     public function can_edit( \WP_REST_Request $r ): bool {
-        return $this->core->relationships()->can_assign((string)$r['relationship'],absint($r['source_id']),sanitize_key((string)$r->get_param('source_type')));
+        return $this->rest_nonce_ok() && $this->core->relationships()->can_assign((string)$r['relationship'],absint($r['source_id']),sanitize_key((string)$r->get_param('source_type')));
     }
     public function can_reverse( \WP_REST_Request $r ): bool {
         $rel=(string)$r['relationship'];$target=absint($r['target_id']);$type=sanitize_key((string)$r->get_param('target_type'));
         if((bool)$r->get_param('public_only'))return $this->core->relationships()->public_endpoint_allowed($rel,$target,true,$type);
-        return $this->core->relationships()->can_read($rel);
+        // Unprivileged reverse reads must pass the relationship's read cap;
+        // rows are additionally filtered by target readability in get_reverse().
+        return current_user_can('inspect_cgm_data')||$this->core->relationships()->can_read($rel);
     }
 
     public function get( \WP_REST_Request $r ): \WP_REST_Response {

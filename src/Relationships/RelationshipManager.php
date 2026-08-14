@@ -83,13 +83,17 @@ final class RelationshipManager {
 
     public function can( string $action, string $id, int $source_id = 0, string $source_type_hint = '' ): bool {
         $d = $this->get_type( $id ); if ( ! $d ) { return false; }
+        if ( current_user_can( 'inspect_cgm_data' ) || current_user_can( 'manage_cgm_relationships' ) ) { return true; }
         $cap = (string) ( $d['permissions'][ $action ] ?? ( 'assign' === $action ? $d['assign_capability'] : $d['read_capability'] ) ?? '' );
         if ( ! $cap ) { return true; }
         if ( $source_id && in_array( $action, array( 'read', 'assign' ), true ) && $this->objects ) {
             $source_type = $this->effective_source_type( $d, $source_id, $source_type_hint );
             $ct = $this->objects->content_type( $source_type );
-            if ( in_array( (string) ( $ct['kind'] ?? '' ), array( 'post', 'media' ), true ) && current_user_can( 'assign' === $action ? 'edit_post' : 'read_post', $source_id ) ) { return true; }
-            if ( 'user' === ( $ct['kind'] ?? '' ) && current_user_can( 'edit_user', $source_id ) ) { return true; }
+            // Object-level check is authoritative: never fall through to a
+            // generic capability when the addressed object fails it.
+            if ( in_array( (string) ( $ct['kind'] ?? '' ), array( 'post', 'media' ), true ) ) { return current_user_can( 'assign' === $action ? 'edit_post' : 'read_post', $source_id ); }
+            if ( 'user' === ( $ct['kind'] ?? '' ) ) { return current_user_can( 'edit_user', $source_id ); }
+            return false;
         }
         return current_user_can( $cap );
     }
@@ -127,7 +131,9 @@ final class RelationshipManager {
 
     public function get_reverse( string $relationship, int $target_id, array $args = array() ): array {
         $d = $this->get_type( $relationship ); if ( ! $d ) { return array(); }
-        $target_type = (string) $d['target_type'];
+        $target_type = sanitize_key( (string) ( $args['target_type'] ?? (string) $d['target_type'] ) );
+        // Unprivileged reverse reads: the addressed target must be readable.
+        if ( empty( $args['public_only'] ) && ! current_user_can( 'inspect_cgm_data' ) && ( ! $this->visibility || ! $this->visibility->can_read( $target_type ?: 'post', $target_id ) ) ) { return array(); }
         $deps = array( 'relationship:' . $d['id'], 'object:' . $target_type . ':' . $target_id );
         $key = 'r:' . $d['id'] . ':' . $target_type . ':' . $target_id . ':' . md5( wp_json_encode( $args ) );
         if ( $this->cache && false !== ( $v = $this->cache->get( $key, 'relationships', $deps ) ) ) { return is_array( $v ) ? $v : array(); }

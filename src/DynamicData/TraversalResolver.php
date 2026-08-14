@@ -20,7 +20,10 @@ final class TraversalResolver {
         $first = array_shift( $segments );
         $relationship = $this->relationship_from_segment( $first, $object->content_type );
         if ( $relationship ) {
-            $rows = $this->core->relationships()->get( (string) $relationship['id'], $object->id, array( 'public_only' => ! empty( $context['public_request'] ), 'source_type'=>$object->content_type ) );
+            // Visibility-filter relationship targets for every non-privileged
+            // caller: the frontend never sets public_request, but anonymous
+            // visitors must not traverse into private/draft targets.
+            $rows = $this->core->relationships()->get( (string) $relationship['id'], $object->id, array( 'public_only' => ! empty( $context['public_request'] ) || ! current_user_can( 'inspect_cgm_data' ), 'source_type'=>$object->content_type ) );
             if ( ! $rows ) { return null; }
             $selector = $segments[0] ?? '';
             if ( 'primary' === $selector ) { array_shift( $segments ); $rows = array_values( array_filter( $rows, static fn( $r ) => ! empty( $r['primary'] ) || ! empty( $r['is_primary'] ) ) ); $rows = $rows ? array( $rows[0] ) : array(); }
