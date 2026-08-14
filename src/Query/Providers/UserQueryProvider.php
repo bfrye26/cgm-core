@@ -83,7 +83,7 @@ final class UserQueryProvider implements QueryProviderInterface {
             if ( in_array( $op, array( 'EXISTS', 'NOT EXISTS' ), true ) ) {
                 return array( 'sql' => ( 'NOT EXISTS' === $op ? 'NOT ' : '' ) . "EXISTS (SELECT 1 FROM {$wpdb->usermeta} um WHERE um.user_id=u.ID AND um.meta_key=%s)", 'params' => array( $key ) );
             }
-            $like = '%"' . sanitize_key( (string) $value ) . '"%';
+            $like = '%"' . $wpdb->esc_like( sanitize_key( (string) $value ) ) . '"%';
             $sql = "EXISTS (SELECT 1 FROM {$wpdb->usermeta} um WHERE um.user_id=u.ID AND um.meta_key=%s AND um.meta_value LIKE %s)";
             if ( in_array( $op, array( '!=', 'NOT LIKE', 'NOT IN' ), true ) ) { $sql = 'NOT ' . $sql; }
             return array( 'sql' => $sql, 'params' => array( $key, $like ) );

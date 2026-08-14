@@ -15,9 +15,16 @@ final class Invalidator {
     public function register(): void {
         add_action( 'save_post', array( $this, 'post' ), 100, 2 );
         add_action( 'deleted_post', array( $this, 'deleted_post' ), 100, 2 );
+        add_action( 'transition_post_status', array( $this, 'status_changed' ), 100, 3 );
         add_action( 'updated_post_meta', array( $this, 'post_meta' ), 100, 4 );
         add_action( 'added_post_meta', array( $this, 'post_meta' ), 100, 4 );
         add_action( 'deleted_post_meta', array( $this, 'deleted_post_meta' ), 100, 4 );
+        add_action( 'updated_user_meta', array( $this, 'user_meta' ), 100, 4 );
+        add_action( 'added_user_meta', array( $this, 'user_meta' ), 100, 4 );
+        add_action( 'deleted_user_meta', array( $this, 'user_meta' ), 100, 4 );
+        add_action( 'updated_term_meta', array( $this, 'term_meta' ), 100, 4 );
+        add_action( 'added_term_meta', array( $this, 'term_meta' ), 100, 4 );
+        add_action( 'deleted_term_meta', array( $this, 'term_meta' ), 100, 4 );
         add_action( 'set_object_terms', array( $this, 'terms' ), 100, 6 );
         foreach ( array( 'created_term', 'edited_term', 'delete_term' ) as $hook ) {
             add_action( $hook, array( $this, 'term_changed' ), 100, 3 );
@@ -25,7 +32,7 @@ final class Invalidator {
         add_action( 'profile_update', array( $this, 'user' ), 100, 2 );
         add_action( 'user_register', array( $this, 'user_created' ), 100 );
         add_action( 'deleted_user', array( $this, 'user_created' ), 100 );
-        add_action( 'cgm_core/relationship_changed', array( $this, 'relationship' ), 100, 1 );
+        add_action( 'cgm_core/relationship_changed', array( $this, 'relationship' ), 100, 2 );
         add_action( 'cgm_core/cache_dependency_changed', array( $this, 'dependency' ), 100, 2 );
     }
 
@@ -39,6 +46,11 @@ final class Invalidator {
 
     public function deleted_post( $id, $post ): void {
         $this->post( $id, $post );
+    }
+
+    /** Trash/untrash/publish/draft changes don't fire save_post; invalidate via status transitions. */
+    public function status_changed( $new_status, $old_status, $post ): void {
+        if ( $post instanceof \WP_Post ) { $this->post( $post->ID, $post ); }
     }
 
     /**
@@ -73,9 +85,31 @@ final class Invalidator {
 
         $this->cache->bump( 'post:' . $post_id );
         if ( '' === $key ) { return; }
-        foreach ( array( 'meta.', 'acf.', 'metabox.' ) as $prefix ) {
+        // Field ids are provider-prefixed: meta.<kind>.<key> (WordPress),
+        // acf.<name>, metabox.<name>. Bump every shape the query engine can
+        // record so meta edits always invalidate dependent query caches.
+        foreach ( array( 'meta.', 'meta.post.', 'acf.', 'metabox.' ) as $prefix ) {
             $this->cache->bump( 'field:' . $prefix . $key );
         }
+    }
+
+    /** @param mixed $meta_id Unused; hook boundary signature only. */
+    public function user_meta( $meta_id, $user_id, $key ): void {
+        $user_id = absint( $user_id );
+        $key     = is_scalar( $key ) ? (string) $key : '';
+        if ( ! $user_id ) { return; }
+        $this->cache->bump( 'user:' . $user_id );
+        $this->cache->bump( 'content:user' );
+        if ( '' !== $key ) { $this->cache->bump( 'field:meta.user.' . $key ); }
+    }
+
+    /** @param mixed $meta_id Unused; hook boundary signature only. */
+    public function term_meta( $meta_id, $term_id, $key ): void {
+        $term_id = absint( $term_id );
+        $key     = is_scalar( $key ) ? (string) $key : '';
+        if ( ! $term_id ) { return; }
+        $this->cache->bump( 'term:' . $term_id );
+        if ( '' !== $key ) { $this->cache->bump( 'field:meta.term.' . $key ); }
     }
 
     public function terms( $object_id, $terms, $tt_ids, $tax ): void {
@@ -106,12 +140,15 @@ final class Invalidator {
         $this->user( $id );
     }
 
-    public function relationship( $payload ): void {
-        if ( ! is_array( $payload ) ) { return; }
-        $rel = sanitize_key( (string) ( $payload['relationship'] ?? '' ) );
+    /** @param mixed $rel_id Relationship id (string) or legacy payload array. */
+    public function relationship( $rel_id, $source_id = 0 ): void {
+        if ( is_array( $rel_id ) ) {
+            $source_id = $rel_id['source_id'] ?? 0;
+            $rel_id    = $rel_id['relationship'] ?? '';
+        }
+        $rel = sanitize_key( (string) $rel_id );
         if ( $rel ) { $this->cache->bump( 'relationship:' . $rel ); }
-        $source = absint( $payload['source_id'] ?? 0 );
-        if ( $source ) { $this->cache->bump( 'object:' . $source ); }
+        if ( absint( $source_id ) ) { $this->cache->bump( 'object:post:' . absint( $source_id ) ); }
     }
 
     public function dependency( $dependency ): void {

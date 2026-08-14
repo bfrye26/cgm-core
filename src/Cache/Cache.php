@@ -19,6 +19,10 @@ final class Cache {
         if ( is_array( $namespace ) ) { $dependencies = $namespace; $namespace = 'default'; }
         return wp_cache_delete( $this->key( $key, $namespace, $dependencies ), self::GROUP );
     }
+    // ponytail: read-modify-write on a serialized options blob is not atomic —
+    // concurrent bumps of the same tag can lose an increment. Bounded by the
+    // query TTL ceiling (1h, QueryValidator) and the 300s relationship TTL;
+    // revisit with per-tag raw-SQL counters if staleness ever matters.
     public function bump( string $tag ): void {
         $key = $this->normalize( $tag ); $epochs = get_option( self::TAG_EPOCHS, array() ); $epochs = is_array( $epochs ) ? $epochs : array();
         $epochs[ $key ] = max( 1, (int) ( $epochs[ $key ] ?? 1 ) + 1 ); update_option( self::TAG_EPOCHS, $epochs, false );

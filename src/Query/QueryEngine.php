@@ -50,8 +50,11 @@ final class QueryEngine {
             ) );
         }
         $dependencies = $this->dependencies( $query, $content_type );
+        // Cache only page-1 runs of saved/code queries: paginated and inline
+        // (ad-hoc) queries would flood the object cache with unique keys.
+        $cacheable = $query['cache'] && 1 === (int) $query['page'] && null !== $saved;
         $cache_key = 'query:' . md5( wp_json_encode( array( $query, $this->cache_context($ctx), $provider->id(), $public_only ) ) );
-        if ( $query['cache'] && false !== ( $cached = $this->cache->get( $cache_key, 'query', $dependencies ) ) && $cached instanceof QueryResult ) {
+        if ( $cacheable && false !== ( $cached = $this->cache->get( $cache_key, 'query', $dependencies ) ) && $cached instanceof QueryResult ) {
             $cached->debug['cache'] = 'hit'; $cached->debug['execution_ms'] = round( ( microtime(true)-$started )*1000, 2 ); return $cached;
         }
 
@@ -60,6 +63,8 @@ final class QueryEngine {
         $dependencies = array_values( array_unique( array_merge( $dependencies, $provider_deps ) ) );
         if ( $public_only ) {
             $result->items = $this->public_filter( $result->items, $content_type );
+            // ponytail: lower-bound the filtered total (true filtered count
+            // needs a filtered COUNT query); never over-promise pages.
             if ( 1 === $result->page && count($result->items) < $result->per_page ) { $result->total = count($result->items); }
         }
         $result->debug['saved_query'] = $saved['id'] ?? null;
@@ -69,7 +74,7 @@ final class QueryEngine {
         $result->debug['dependencies'] = $dependencies;
         $result->debug['cache'] = 'miss';
         $result->debug['execution_ms_total'] = round( ( microtime(true)-$started )*1000, 2 );
-        if ( $query['cache'] ) { $this->cache->set( $cache_key, $result, max(15,absint($query['cache_ttl']??120)), 'query', $dependencies ); }
+        if ( $cacheable ) { $this->cache->set( $cache_key, $result, max(15,absint($query['cache_ttl']??120)), 'query', $dependencies ); }
         do_action( 'cgm_core/query_executed', $query, $ctx, $result, $content_type );
         return $result;
     }
@@ -127,6 +132,8 @@ final class QueryEngine {
             if('relationship'===($segments[0]??''))array_shift($segments);
             $rel=$segments?$this->core->relationships()->relationship_for_path((string)$segments[0],$source_type):null;
             if($rel)$deps[]='relationship:'.sanitize_key((string)$rel['id']);
+            // Register every field segment so traversed field edits invalidate.
+            foreach($segments as $segment){if($this->core->fields()->get($segment))$deps[]='field:'.sanitize_text_field($segment);}
         };
         $walk=function(array $group)use(&$walk,&$deps,$add_path):void{
             foreach((array)($group['rules']??array()) as $rule){
