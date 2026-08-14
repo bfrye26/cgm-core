@@ -102,7 +102,7 @@ export function AppLayout() {
                 {label}
                 <span
                   className={cn(
-                    'absolute inset-x-3 -bottom-px h-0.5 rounded-full bg-indigo-bright transition-all duration-300',
+                    'absolute inset-x-3 bottom-0 h-0.5 rounded-full bg-indigo-bright transition-all duration-300',
                     active ? 'opacity-100' : 'opacity-0',
                   )}
                 />
