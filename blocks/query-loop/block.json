@@ -1,0 +1,31 @@
+{
+  "apiVersion": 3,
+  "name": "cgm-core/query-loop",
+  "title": "CGM Query Loop",
+  "category": "theme",
+  "icon": "filter",
+  "description": "Repeat native blocks using a saved CGM query.",
+  "supports": {
+    "html": false
+  },
+  "attributes": {
+    "queryId": {
+      "type": "string",
+      "default": ""
+    },
+    "showEmpty": {
+      "type": "boolean",
+      "default": true
+    },
+    "mode": {
+      "type": "string",
+      "default": "saved"
+    },
+    "queryDefinition": {
+      "type": "object",
+      "default": {}
+    }
+  },
+  "editorScript": "file:./editor.js",
+  "style": "file:./style.css"
+}

@@ -1,0 +1,1 @@
+<?xml version="1.0"?><ruleset name="CGM Core"><description>CGM Core WordPress coding standards.</description><file>cgm-core.php</file><file>src</file><exclude-pattern>vendor/*</exclude-pattern><rule ref="WordPress-Core"/><rule ref="WordPress-Extra"/><rule ref="WordPress-Docs"/><config name="minimum_supported_wp_version" value="6.7"/></ruleset>

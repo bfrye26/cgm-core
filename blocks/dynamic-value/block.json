@@ -1,0 +1,26 @@
+{
+  "apiVersion": 3,
+  "name": "cgm-core/dynamic-value",
+  "title": "CGM Dynamic Value",
+  "category": "theme",
+  "icon": "database",
+  "description": "Render any CGM Core dynamic-data path for the current query object.",
+  "supports": {
+    "html": false
+  },
+  "attributes": {
+    "key": {
+      "type": "string",
+      "default": "post.title"
+    },
+    "tagName": {
+      "type": "string",
+      "default": "span"
+    },
+    "path": {
+      "type": "string",
+      "default": ""
+    }
+  },
+  "editorScript": "file:./editor.js"
+}

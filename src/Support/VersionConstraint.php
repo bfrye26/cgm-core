@@ -1,0 +1,5 @@
+<?php
+namespace CGM\Core\Support;
+final class VersionConstraint {
+    public static function matches(string $version,string $constraint):bool{$version=preg_replace('/[^0-9.].*$/','',$version)?:'0';$constraint=trim($constraint);if(''===$constraint||'*'===$constraint)return true;if(str_contains($constraint,'||')){foreach(explode('||',$constraint) as $part)if(self::matches($version,trim($part)))return true;return false;}if(str_contains($constraint,',')){foreach(explode(',',$constraint) as $part)if(!self::matches($version,trim($part)))return false;return true;}if(str_starts_with($constraint,'^')){$min=substr($constraint,1);$p=array_map('intval',explode('.',$min));$max=(($p[0]??0)+1).'.0.0';return version_compare($version,$min,'>=')&&version_compare($version,$max,'<');}if(str_starts_with($constraint,'~')){$min=substr($constraint,1);$p=array_map('intval',explode('.',$min));$max=($p[0]??0).'.'.(($p[1]??0)+1).'.0';return version_compare($version,$min,'>=')&&version_compare($version,$max,'<');}if(preg_match('/^(>=|<=|>|<|=)\s*(.+)$/',$constraint,$m))return version_compare($version,$m[2],$m[1]);return version_compare($version,$constraint,'>=');}
+}

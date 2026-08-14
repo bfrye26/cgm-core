@@ -1,0 +1,227 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* ── CGM Core Console — sibling design tokens ──────────────────────── */
+/* Same architecture as Image Renamer (violet/teal), Tag Manager
+   (pine/ember) and Game Linker (cobalt/coral): warm paper base, dot-grid,
+   Space Grotesk / IBM Plex, count-up + staggered-rise motion. Re-themed
+   for the foundation layer with a cool obsidian neutral + indigo brand +
+   amber accent, and a "node" chip motif (a dot with radiating connection
+   edges) in place of the tag/link/viewfinder chips. */
+.cgm-core-root {
+  /* surfaces — cool obsidian neutral */
+  --paper: 220 24% 97%;
+  --surface: 0 0% 100%;
+  --surface-2: 220 20% 95%;
+  --ink: 222 30% 12%;
+  --ink-soft: 222 14% 34%;
+  --ink-faint: 222 10% 52%;
+  --line: 220 16% 88%;
+  --line-strong: 220 12% 80%;
+
+  /* brand — indigo */
+  --indigo: 231 60% 52%;
+  --indigo-bright: 231 62% 60%;
+  --indigo-soft: 231 56% 95%;
+  --indigo-ink: 231 52% 32%;
+
+  /* accent — amber */
+  --amber: 38 92% 50%;
+  --amber-bright: 38 90% 56%;
+  --amber-soft: 40 92% 94%;
+  --amber-ink: 32 76% 28%;
+
+  /* signals */
+  --pine: 163 55% 34%;
+  --pine-soft: 163 45% 93%;
+  --gold: 40 90% 46%;
+  --gold-soft: 44 88% 93%;
+  --rust: 8 68% 46%;
+  --rust-soft: 8 62% 94%;
+
+  --radius: 12px;
+
+  /* shadcn-compatible aliases */
+  --background: var(--paper);
+  --foreground: var(--ink);
+  --card: var(--surface);
+  --card-foreground: var(--ink);
+  --primary: var(--indigo);
+  --primary-foreground: 0 0% 100%;
+  --secondary: var(--surface-2);
+  --secondary-foreground: var(--ink);
+  --muted: var(--surface-2);
+  --muted-foreground: var(--ink-faint);
+  --accent: var(--amber);
+  --accent-foreground: 0 0% 100%;
+  --destructive: var(--rust);
+  --destructive-foreground: 0 0% 100%;
+  --border: var(--line);
+  --input: var(--line-strong);
+  --ring: var(--indigo-bright);
+
+  position: relative;
+  margin: 0 -20px;
+  min-height: calc(100vh - 100px);
+  padding: 28px 32px 64px;
+  background-color: hsl(var(--paper));
+  background-image:
+    radial-gradient(circle at 10% -8%, hsl(var(--indigo-soft)) 0%, transparent 42%),
+    radial-gradient(circle at 96% 2%, hsl(var(--amber-soft)) 0%, transparent 38%),
+    radial-gradient(hsl(var(--line-strong) / 0.5) 1px, transparent 1px);
+  background-size: 100% 100%, 100% 100%, 22px 22px;
+  background-attachment: local;
+  color: hsl(var(--ink));
+  font-family: 'IBM Plex Sans', system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+  font-size: 14px;
+  line-height: 1.55;
+  -webkit-font-smoothing: antialiased;
+}
+
+.cgm-core-root *,
+.cgm-core-root *::before,
+.cgm-core-root *::after {
+  box-sizing: border-box;
+}
+
+/* ── Typography ─────────────────────────────────────────────────────── */
+.cgm-core-root .font-display {
+  font-family: 'Space Grotesk', 'IBM Plex Sans', system-ui, sans-serif;
+  letter-spacing: -0.02em;
+}
+.cgm-core-root .font-mono {
+  font-family: 'IBM Plex Mono', ui-monospace, 'SF Mono', monospace;
+  font-feature-settings: 'tnum';
+}
+.cgm-core-root .eyebrow {
+  font-family: 'IBM Plex Mono', monospace;
+  font-size: 11px;
+  font-weight: 500;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: hsl(var(--ink-faint));
+}
+
+/* ── Motion ─────────────────────────────────────────────────────────── */
+@keyframes cgm-rise {
+  from { opacity: 0; transform: translateY(10px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+@keyframes cgm-fade {
+  from { opacity: 0; }
+  to   { opacity: 1; }
+}
+@keyframes cgm-pulse {
+  0%, 100% { opacity: 1; transform: scale(1); }
+  50%      { opacity: 0.45; transform: scale(0.82); }
+}
+@keyframes cgm-shimmer {
+  100% { transform: translateX(100%); }
+}
+@keyframes cgm-spin {
+  to { transform: rotate(360deg); }
+}
+@keyframes cgm-dialog {
+  from { opacity: 0; transform: translateY(8px) scale(0.98); }
+  to   { opacity: 1; transform: translateY(0) scale(1); }
+}
+
+.cgm-core-root .rise {
+  animation: cgm-rise 0.5s cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .cgm-core-root *,
+  .cgm-core-root *::before,
+  .cgm-core-root *::after {
+    animation-duration: 0.001ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.001ms !important;
+  }
+}
+
+/* ── Node chip motif (connection dot + radiating edges) ─────────────── */
+.cgm-core-root .node-chip {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 4px 12px 4px 10px;
+  border-radius: 5px;
+  font-size: 12px;
+  font-weight: 500;
+  line-height: 1.4;
+  background: hsl(var(--indigo-soft));
+  color: hsl(var(--indigo-ink));
+}
+.cgm-core-root .node-chip::before {
+  content: '';
+  width: 7px;
+  height: 7px;
+  border-radius: 999px;
+  background: hsl(var(--indigo-bright));
+  box-shadow:
+    0 0 0 2px hsl(var(--indigo-soft)),
+    0 0 0 4px hsl(var(--indigo) / 0.18);
+}
+.cgm-core-root .node-chip--amber { background: hsl(var(--amber-soft)); color: hsl(var(--amber-ink)); }
+.cgm-core-root .node-chip--amber::before {
+  background: hsl(var(--amber-bright));
+  box-shadow:
+    0 0 0 2px hsl(var(--amber-soft)),
+    0 0 0 4px hsl(var(--amber) / 0.18);
+}
+.cgm-core-root .node-chip--neutral { background: hsl(var(--surface-2)); color: hsl(var(--ink-soft)); }
+.cgm-core-root .node-chip--neutral::before {
+  background: hsl(var(--ink-faint));
+  box-shadow:
+    0 0 0 2px hsl(var(--surface-2)),
+    0 0 0 4px hsl(var(--ink-faint) / 0.18);
+}
+.cgm-core-root .node-chip--pine { background: hsl(var(--pine-soft)); color: hsl(163 50% 24%); }
+.cgm-core-root .node-chip--pine::before {
+  background: hsl(var(--pine));
+  box-shadow:
+    0 0 0 2px hsl(var(--pine-soft)),
+    0 0 0 4px hsl(var(--pine) / 0.18);
+}
+.cgm-core-root .node-chip--gold { background: hsl(var(--gold-soft)); color: hsl(32 70% 28%); }
+.cgm-core-root .node-chip--gold::before {
+  background: hsl(var(--gold));
+  box-shadow:
+    0 0 0 2px hsl(var(--gold-soft)),
+    0 0 0 4px hsl(var(--gold) / 0.18);
+}
+.cgm-core-root .node-chip--rust { background: hsl(var(--rust-soft)); color: hsl(8 55% 32%); }
+.cgm-core-root .node-chip--rust::before {
+  background: hsl(var(--rust));
+  box-shadow:
+    0 0 0 2px hsl(var(--rust-soft)),
+    0 0 0 4px hsl(var(--rust) / 0.18);
+}
+
+/* ── Skeleton shimmer ───────────────────────────────────────────────── */
+.cgm-core-root .skeleton {
+  position: relative;
+  overflow: hidden;
+  background: hsl(var(--surface-2));
+  border-radius: 6px;
+}
+.cgm-core-root .skeleton::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  transform: translateX(-100%);
+  background: linear-gradient(90deg, transparent, hsl(var(--surface) / 0.7), transparent);
+  animation: cgm-shimmer 1.4s infinite;
+}
+
+/* ── Scrollbars ─────────────────────────────────────────────────────── */
+.cgm-core-root ::-webkit-scrollbar { width: 10px; height: 10px; }
+.cgm-core-root ::-webkit-scrollbar-thumb {
+  background: hsl(var(--line-strong));
+  border-radius: 999px;
+  border: 2px solid hsl(var(--paper));
+}
+.cgm-core-root ::-webkit-scrollbar-thumb:hover { background: hsl(var(--ink-faint)); }

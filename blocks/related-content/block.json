@@ -1,0 +1,26 @@
+{
+  "apiVersion": 3,
+  "name": "cgm-core/related-content",
+  "title": "CGM Related Content",
+  "category": "theme",
+  "icon": "networking",
+  "description": "List objects related to the current post through a CGM relationship.",
+  "supports": {
+    "html": false
+  },
+  "attributes": {
+    "relationship": {
+      "type": "string",
+      "default": "game"
+    },
+    "limit": {
+      "type": "number",
+      "default": 5
+    },
+    "heading": {
+      "type": "string",
+      "default": ""
+    }
+  },
+  "editorScript": "file:./editor.js"
+}

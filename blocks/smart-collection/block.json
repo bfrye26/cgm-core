@@ -1,0 +1,26 @@
+{
+  "apiVersion": 3,
+  "name": "cgm-core/smart-collection",
+  "title": "CGM Smart Collection",
+  "category": "theme",
+  "icon": "filter",
+  "description": "Render a saved CGM query as a list, optionally with exposed filters.",
+  "supports": {
+    "html": false
+  },
+  "attributes": {
+    "queryId": {
+      "type": "string",
+      "default": ""
+    },
+    "filters": {
+      "type": "boolean",
+      "default": false
+    },
+    "limit": {
+      "type": "number",
+      "default": 0
+    }
+  },
+  "editorScript": "file:./editor.js"
+}
