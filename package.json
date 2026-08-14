@@ -1,6 +1,6 @@
 {
   "name": "cgm-core",
-  "version": "3.0.0",
+  "version": "3.0.1",
   "private": true,
   "description": "CGM Core — WordPress content interoperability platform and CGM suite control room.",
   "type": "module",

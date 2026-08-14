@@ -1,4 +1,4 @@
-# CGM Core 3.0.0
+# CGM Core 3.0.1
 
 CGM Core is a WordPress-native content interoperability platform for CGMagazine. It does not replace WordPress admin, Gutenberg, ACF, or page builders. It gives them one shared language for content objects, fields, relationships, queries, context, dynamic data, configuration, events, services, permissions, and builder integrations.
 
