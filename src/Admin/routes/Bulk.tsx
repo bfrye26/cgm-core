@@ -4,10 +4,12 @@ import { toast } from 'sonner';
 import { Card, CardHeader, CardBody, Button, Select, Label, PageLoader, Notice, EmptyState } from '@/components/ui';
 import { ActionsEditor } from '@/components/actions-editor';
 import { useBootstrap, useRules, useBulkPreview, useBulkRun, defaultDefinition, type RuleAction, type QueryDefinition } from '@/lib/hooks';
+import { caps } from '@/lib/api';
 
 export function BulkPage() {
   const bootstrap = useBootstrap();
-  const rulesQuery = useRules();
+  const canBulk = caps().manageQueries || caps().manage;
+  const rulesQuery = useRules(canBulk);
   const preview = useBulkPreview();
   const run = useBulkRun();
 
@@ -16,7 +18,7 @@ export function BulkPage() {
   const [previewResult, setPreviewResult] = useState<{ count: number; sample: { id: number; type: string; label: string }[] } | null>(null);
   const [runResult, setRunResult] = useState<{ processed: number; succeeded: number; failed: number } | null>(null);
 
-  if (bootstrap.isLoading || rulesQuery.isLoading) return <PageLoader />;
+  if (bootstrap.isLoading || (canBulk && rulesQuery.isLoading)) return <PageLoader />;
 
   const contentTypes = bootstrap.data?.contentTypes ?? [];
   const savedQueries = bootstrap.data?.savedQueries ?? [];
@@ -50,6 +52,10 @@ export function BulkPage() {
         <p className="mt-1 text-[13px] text-ink-faint">Run an action against every object in a saved query or content type — set terms, statuses, meta, relationships, and more, in one pass.</p>
       </div>
 
+      {!canBulk && <Notice tone="gold">You do not have permission to run bulk operations.</Notice>}
+
+      {canBulk && (
+      <>
       <Card className="rise" style={{ animationDelay: '60ms' }}>
         <CardHeader title="1 · Select the result set" desc="A saved query or a whole content type" />
         <CardBody>
@@ -102,6 +108,8 @@ export function BulkPage() {
 
       {contentTypes.length === 0 && savedQueries.length === 0 && (
         <EmptyState icon={<Layers className="h-5 w-5" />} title="Nothing to operate on" desc="Define content or a saved query first." />
+      )}
+      </>
       )}
     </div>
   );

@@ -77,8 +77,8 @@ function DiffView({ preview }: { preview: DiffPreview }) {
 
 export function ConfigurationPage() {
   const canManage = caps().manageConfig || caps().manage;
-  const exportQuery = useConfigExport();
-  const backupsQuery = useConfigBackups();
+  const exportQuery = useConfigExport(canManage);
+  const backupsQuery = useConfigBackups(canManage);
   const diffMutation = useConfigDiff();
   const importMutation = useConfigImport();
   const rollbackMutation = useConfigRollback();

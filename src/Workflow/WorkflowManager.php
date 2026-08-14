@@ -172,6 +172,8 @@ final class WorkflowManager {
 
     private function find_due_posts( string $from, int $after_days, array $types ): array {
         $post_types = ( empty( $types ) || in_array( '*', $types, true ) ) ? get_post_types( array( 'public' => true ) ) : $types;
+        // ponytail: daily sweep caps at 200 posts; paginate if larger sites
+        // ever report missed auto-transitions.
         $query = new \WP_Query( array(
             'post_type' => $post_types, 'post_status' => array( 'publish', 'draft', 'pending', 'private' ),
             'posts_per_page' => 200, 'fields' => 'ids', 'no_found_rows' => true,

@@ -1,19 +1,22 @@
 import { useEffect, useState } from 'react';
 import { Zap, Plus, Trash2, Save, Pencil, X } from 'lucide-react';
 import { toast } from 'sonner';
-import { Card, CardHeader, CardBody, Button, Input, Select, Label, NodeChip, PageLoader, Checkbox, EmptyState } from '@/components/ui';
+import { Card, CardHeader, CardBody, Button, Input, Select, Label, NodeChip, PageLoader, Checkbox, EmptyState, Notice } from '@/components/ui';
 import { ActionsEditor } from '@/components/actions-editor';
 import { useBootstrap, useRules, useSaveRules, type Rule } from '@/lib/hooks';
+import { caps } from '@/lib/api';
 
 const OPERATORS = ['=', '!=', '>', '>=', '<', '<=', 'LIKE', 'NOT LIKE', 'IN', 'NOT IN', 'EXISTS', 'NOT EXISTS'];
 
 function blankRule(): Rule {
-  return { id: '', label: '', event: 'content.changed', enabled: true, conditions: [], actions: [] };
+  // The server skips rules without an id; generate one client-side.
+  return { id: `rule_${Date.now()}`, label: '', event: 'content.changed', enabled: true, conditions: [], actions: [] };
 }
 
 export function AutomationPage() {
   const bootstrap = useBootstrap();
-  const rulesQuery = useRules();
+  const canView = caps().manage || caps().inspectData;
+  const rulesQuery = useRules(canView);
   const saveRules = useSaveRules();
 
   const [rules, setRules] = useState<Rule[] | null>(null);
@@ -23,7 +26,7 @@ export function AutomationPage() {
     if (rules === null && rulesQuery.data) setRules(rulesQuery.data.rules);
   }, [rules, rulesQuery.data]);
 
-  if (bootstrap.isLoading || rulesQuery.isLoading) return <PageLoader />;
+  if (bootstrap.isLoading || (canView && rulesQuery.isLoading)) return <PageLoader />;
 
   const fields = bootstrap.data?.fields ?? [];
   const relationships = bootstrap.data?.relationships ?? [];
@@ -43,7 +46,7 @@ export function AutomationPage() {
   const remove = (i: number) => { setRules(editable.filter((_, j) => j !== i)); setEditing(null); };
 
   const onSave = async () => {
-    const clean = editable.filter((r) => r.label.trim() && r.event);
+    const clean = editable.filter((r) => r.label.trim() && r.event && r.id);
     await saveRules.mutateAsync(clean);
     toast.success('Automation rules saved.');
     setEditing(null);
@@ -118,10 +121,12 @@ export function AutomationPage() {
           <h2 className="mt-1 font-display text-3xl font-bold tracking-tight text-ink">Automation</h2>
           <p className="mt-1 text-[13px] text-ink-faint">React to content and relationship events: when X happens, do Y — reindex search, purge caches, dispatch events, call registered actions.</p>
         </div>
-        {editing === null && <Button icon={<Plus className="h-4 w-4" />} onClick={startNew}>New rule</Button>}
+        {canView && editing === null && <Button icon={<Plus className="h-4 w-4" />} onClick={startNew}>New rule</Button>}
       </div>
 
-      {editing !== null && editingRule ? (
+      {!canView && <Notice tone="gold">You do not have permission to manage automation rules.</Notice>}
+
+      {canView && (editing !== null && editingRule ? (
         renderEditor(editing, editingRule)
       ) : editable.length === 0 ? (
         <EmptyState icon={<Zap className="h-5 w-5" />} title="No rules yet" desc="Create a rule to automate a workflow." action={<Button icon={<Plus className="h-4 w-4" />} onClick={startNew}>New rule</Button>} />
@@ -142,7 +147,7 @@ export function AutomationPage() {
             </div>
           ))}
         </div>
-      )}
+      ))}
     </div>
   );
 }

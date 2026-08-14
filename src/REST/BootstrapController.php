@@ -20,7 +20,7 @@ final class BootstrapController extends BaseController {
         register_rest_route( $this->namespace, '/bootstrap', array(
             'methods'             => \WP_REST_Server::READABLE,
             'callback'            => fn() => rest_ensure_response( $this->cached_payload() ),
-            'permission_callback' => fn() => current_user_can( 'inspect_cgm_core' ) || $this->can_manage() || current_user_can( 'manage_cgm_queries' ),
+            'permission_callback' => fn() => current_user_can( 'inspect_cgm_core' ) || $this->can_manage() || current_user_can( 'manage_cgm_queries' ) || current_user_can( 'manage_cgm_configuration' ),
         ) );
     }
 

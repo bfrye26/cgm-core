@@ -322,10 +322,11 @@ export interface RuleAction {
   delay?: number;
 }
 export interface Rule { id: string; label: string; event: string; enabled: boolean; conditions: RuleCondition[]; actions: RuleAction[] }
-export function useRules() {
+export function useRules(enabled = true) {
   return useQuery({
     queryKey: ['rules'],
     queryFn: () => apiGet<{ rules: Rule[]; events: { id: string; label: string }[]; actions: { id: string; label: string }[] }>('rules'),
+    enabled,
   });
 }
 export function useSaveRules() {
@@ -429,11 +430,11 @@ export function useDismissNotification() {
 }
 
 /* ── Config ─────────────────────────────────────────────────────────── */
-export function useConfigBackups() {
-  return useQuery({ queryKey: ['config-backups'], queryFn: () => apiGet<{ backups: { id: string; created: string }[]; pending?: unknown }>('config/backups') });
+export function useConfigBackups(enabled = true) {
+  return useQuery({ queryKey: ['config-backups'], queryFn: () => apiGet<{ backups: { id: string; created: string }[]; pending?: unknown }>('config/backups'), enabled });
 }
-export function useConfigExport() {
-  return useQuery({ queryKey: ['config-export'], queryFn: () => apiGet<Record<string, unknown>>('config/export') });
+export function useConfigExport(enabled = true) {
+  return useQuery({ queryKey: ['config-export'], queryFn: () => apiGet<Record<string, unknown>>('config/export'), enabled });
 }
 export function useConfigDiff() {
   return useMutation({

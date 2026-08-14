@@ -48,6 +48,9 @@ final class ListTables {
         if ( ! is_admin() || ! $q->is_main_query() ) { return; }
         $state = sanitize_key( (string) ( $_GET['cgm_state'] ?? '' ) ); // phpcs:ignore WordPress.Security.NonceVerification.Recommended
         if ( ! $state ) { return; }
+        // Mirror the dropdown: only apply the filter on registered CGM lists.
+        $post_type = $q->get( 'post_type' );
+        if ( is_array( $post_type ) || ! $post_type || ! $this->core->content_types()->has( (string) $post_type ) ) { return; }
         $q->set( 'meta_key', WorkflowManager::META );
         $q->set( 'meta_value', $state );
     }
