@@ -13,7 +13,7 @@ foreach ( $iterator as $file ) {
 }
 $bootstrap = (string) file_get_contents( $root . '/cgm-core.php' );
 foreach ( array(
-    "CGM_CORE_VERSION', '3.0.0-beta.1",
+    "CGM_CORE_VERSION', '3.0.0",
     "CGM_CORE_API_VERSION', '3.0'",
     "CGM_CORE_QUERY_API_VERSION', '3.0'",
     "CGM_CORE_RELATIONSHIP_API_VERSION', '3.0'",

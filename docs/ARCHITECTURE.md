@@ -14,7 +14,7 @@ Feature plugins / data providers
 │ Query Providers          Query Planner / Saved Queries      │
 │ Context Engine           Typed Dynamic Data / Traversal     │
 │ Events + Services        Cache Dependencies                 │
-│ Configuration            Permissions / REST / CLI           │
+│ Configuration            REST / CLI + capability gates    │
 └──────────────────────────────────────────────────────────────┘
                               │
           ┌───────────────────┼──────────────────────┐

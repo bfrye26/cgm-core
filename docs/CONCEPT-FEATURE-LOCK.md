@@ -26,7 +26,7 @@
 | Plugin communication | Versioned `EventBus` and versioned `ServiceRegistry` |
 | Caching | Dependency/tag-aware cache epochs and invalidation |
 | Configuration management | Versioned export, validation, diff, dry run, merge/replace, backup, rollback, recovery and network defaults |
-| Permissions | Core capabilities plus relationship/provider/object visibility checks |
+| Permissions | Capability enforcement across workflow transitions, query visibility, dynamic data and relationship reads |
 | REST | Versioned registry, query, object, relationship, dynamic data, editor and configuration controllers |
 | Gutenberg | Native Post Summary controls, relationship editing, Block Bindings, Query Loop and Dynamic Value blocks |
 | Bricks | Custom saved query types, inline query contract, dynamic tags, loop objects and Element Conditions |

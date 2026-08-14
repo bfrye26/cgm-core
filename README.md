@@ -1,4 +1,4 @@
-# CGM Core 3.0.0-beta.1
+# CGM Core 3.0.0
 
 CGM Core is a WordPress-native content interoperability platform for CGMagazine. It does not replace WordPress admin, Gutenberg, ACF, or page builders. It gives them one shared language for content objects, fields, relationships, queries, context, dynamic data, configuration, events, services, permissions, and builder integrations.
 
@@ -8,7 +8,7 @@ CGM Core ships a React admin console (the "control room") for the whole CGM suit
 
 - **Overview** — cross-suite health, a live event/activity feed, query performance (executions, avg ms, cache-hit rate), and builder/provider status.
 - **Setup / Diagnostics** — discovery, provider compatibility, builder adapters, and search-index definitions.
-- **Queries** (Smart Collections) — a visual nested AND/OR query builder with live preview and explain; save once, then reuse in Gutenberg, Bricks, Elementor, shortcodes, RSS/JSON feeds, or CSV/JSON export.
+- **Queries** (Smart Collections) — a visual nested AND/OR query builder with live preview and explain; save once, then reuse in Gutenberg, Bricks, Elementor, shortcodes, or CSV/JSON export.
 - **Content / Data** — the content/field registry, a browsable dynamic-data token library with copy-paste snippets (`{cgm:…}`, `[cgm_data key="…"]`), and a live token preview.
 - **Relationships** — a model editor and an **integrity** audit (orphaned references, cardinality violations) with dry-run/confirm repair.
 - **Reports** — COUNT/SUM/AVG/MIN/MAX aggregation grouped by field, taxonomy, or relationship.
@@ -27,14 +27,14 @@ CGM Core ships a React admin console (the "control room") for the whole CGM suit
 - **Field registry** for native WordPress fields/meta, ACF, Meta Box, user meta, term meta, and provider-defined fields.
 - **Relationship platform** with forward/reverse references, cardinality, ordering, primary records, roles, typed relationship metadata, permissions, visibility, provider-owned storage, and Core-owned storage.
 - **Drupal Views-style query platform** with nested AND/OR groups, fields, taxonomies, relationships, typed operators, multiple sorts, contextual values, pagination, query providers, SQL planning for WordPress entities, reusable saved queries, code-defined queries, preview, explain output, and **aggregation**.
-- **Views displays and exposed filters** — a saved query can render as a list, block, feed, or REST endpoint, and `[cgm_view id="slug" filters="1"]` renders a user-facing filter form.
+- **Views displays and exposed filters** — a saved query can render as a list, block, or REST endpoint, and `[cgm_view id="slug" filters="1"]` renders a user-facing filter form.
 - **Context engine** including current post/user/author/term/query item and provider/relationship-derived contexts.
 - **Typed dynamic data** with multi-hop traversal through objects, fields, and relationships, plus optional fallbacks and formatters.
 - **Automation rules** — event → conditions → actions on the event bus, with built-in actions and a `cgm_register_rule_action()` extension point.
 - **Search-index definitions and facets** — plugins register indexes via `cgm_register_index()` and facets via `cgm_register_facet()`; Core fans content/relationship changes out to `index.rebuild` events and provides a unified search facade.
 - **Workflow states** — registrable editorial states via `cgm_register_workflow_state()`, queryable and contextual.
 - **View modes** — named presentations via `cgm_register_view_mode()`, rendered by `[cgm_object]`.
-- **Capability mapping** — `cgm_core_can( $operation, $resource )` maps Core operations to WP capabilities.
+- **Capability mapping** — granular capabilities (`manage_cgm_*`, `inspect_cgm_*`) gate the control room, REST write routes (nonce + capability), per-object workflow transitions, and query/relationship visibility.
 - **Pathauto, locale and notifications** — `cgm_pathauto()`, `cgm_locale()`, and `cgm_notify()` contracts.
 - **Bulk operations** — run rule actions against a query's result set.
 - **Configuration management** with export, validation, diff, dry run, merge/replace, backups, rollback, interrupted-import recovery, code-managed configuration, and optional multisite network defaults.

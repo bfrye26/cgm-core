@@ -2,16 +2,18 @@
 /**
  * Plugin Name: CGM Core
  * Description: WordPress-native structured content, relationships, query, dynamic data, and builder interoperability platform.
- * Version: 3.0.0-beta.1
+ * Version: 3.0.0
  * Requires at least: 6.7
  * Requires PHP: 8.1
  * Author: CGMagazine
+ * License: GPL-2.0-or-later
+ * License URI: https://www.gnu.org/licenses/gpl-2.0.html
  * Text Domain: cgm-core
  */
 
 if ( ! defined( 'ABSPATH' ) ) { exit; }
 
-define( 'CGM_CORE_VERSION', '3.0.0-beta.1' );
+define( 'CGM_CORE_VERSION', '3.0.0' );
 // Core 3 does not ship the retired CGMUI 1.x application runtime. Keep the legacy
 // contract explicit so older Suite modules can fail closed instead of fatally erroring.
 if ( ! defined( 'CGM_CORE_UI_CONTRACT_VERSION' ) ) { define( 'CGM_CORE_UI_CONTRACT_VERSION', '0.0.0' ); }
